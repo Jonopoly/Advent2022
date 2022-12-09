@@ -1,124 +1,76 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using static System.Int32;
+
 namespace DayFour
 {
-    
-    public record ElfAssignment(int Begin, int End) {
-        public static ElfAssignment Parse(string e) => 
-            e.Split('-').Select(int.Parse).Chunk(2)
-                .Select(p => new ElfAssignment(p[0], p[1])).Single();
-
-        public bool Overlaps(ElfAssignment other) =>
-            !(End < other.Begin || Begin > other.End);
-
-        public bool OverlapsFully(ElfAssignment other) =>
-            Begin >= other.Begin && End <= other.End
-            || other.Begin >= Begin && other.End <= End;
-    }
-
-    public static class Assignments {
-        private static ElfAssignment[] ParseAssignments(string ep) =>
-            ep.Split(',').Select(ElfAssignment.Parse).Chunk(2).Single();
-
-        public static int Part1() => 
-            File.ReadLines("input.txt")
-                .Select(ParseAssignments).Count(p => p[0].OverlapsFully(p[1]));
-
-        public static int Part2() => 
-            File.ReadLines("../../../input.txt")
-                .Select(ParseAssignments).Count(p => p[0].Overlaps(p[1]));
-    }
-    
-    
     static class DayFour
     {
-        public static void Main(string[] args)
+        public static void Main()
         {
             var allLines = File.ReadAllLines("../../../input.txt");
-            // PartOne.Run(allLines);
-            // PartTwo.Run(allLines);
-            Console.WriteLine(Assignments.Part2());
-
-
+            PartOne.Run("Part One Total is: ", allLines);
+            PartTwo.Run("Part Two Total is: ", allLines);
         }
-        
-            
-            
     }
 
-    
-    
+
     internal static class PartOne
     {
-        public static void Run(string[] allLines)
+        public static void Run(string str, string[] allLines)
         {
             var consumed = 0;
             foreach (var line in allLines)
             {
-                var sectionPair = line.Split(',');
-                var elfOne = sectionPair[0].Split("-");
-                var elfTwo = sectionPair[1].Split("-");
-                var eldOneRange = Utils.GetElfRange(elfOne);
-                var elfTwoRange = Utils.GetElfRange(elfTwo);
-                
-                if (OneRangeFullyContainTheOther(eldOneRange, elfTwoRange))
+                var pairs = line.Split(',');
+                var eldOneRange = Utils.GetElfRange(pairs[0].Split("-"));
+                var elfTwoRange = Utils.GetElfRange(pairs[1].Split("-"));
+
+                if (RangeIsFulledConsumed(eldOneRange, elfTwoRange))
                 {
                     consumed++;
                 }
             }
-            Console.WriteLine(consumed + " Ranges are fully covered");
+
+            Console.WriteLine($"{str}: {consumed}");
         }
 
-        private static bool OneRangeFullyContainTheOther(List<int> firstList, List<int> secondList)
+        private static bool RangeIsFulledConsumed(List<int> firstList, List<int> secondList)
         {
-            var x = firstList.Count < secondList.Count 
-                ? firstList.Except(secondList).ToList() 
-                : secondList.Except(firstList).ToList();
-            return !x.Any();
+            return !(firstList.Count < secondList.Count
+                ? firstList.Except(secondList).ToList()
+                : secondList.Except(firstList).ToList()).Any();
         }
-
-  
     }
 
 
     internal static class PartTwo
     {
-
-
-        public static void Run(string[] allLines)
+        public static void Run(string str, IEnumerable<string> allLines)
         {
-            var AreasCovered = new List<int>();
-            var ElvesOverlapping = 0;
-            
-            foreach (var line in allLines)
+            var totalPairMatch = 0;
+
+            foreach (var pairAssignment in allLines)
             {
-                var sectionPair = line.Split(',');
-                var elfOne = sectionPair[0].Split("-");
-                var elfTwo = sectionPair[1].Split("-");
-                
-                var elfOneRange = Utils.GetElfRange(elfOne);
-                var elfTwoRange = Utils.GetElfRange(elfTwo);
-                if (IsAnyOverLapping(elfOneRange,AreasCovered) || IsAnyOverLapping(elfTwoRange,AreasCovered))
+                var pairs = pairAssignment.Split(',');
+
+                var eldOneRange = Utils.GetElfRange(pairs[0].Split("-"));
+                var elfTwoRange = Utils.GetElfRange(pairs[1].Split("-"));
+
+                if (RangeOverlaps(eldOneRange, elfTwoRange).Any())
                 {
-                    ElvesOverlapping++;
+                    totalPairMatch++;
                 }
-
-
             }
-            
-            Console.WriteLine(ElvesOverlapping + " Ranges are fully covered");
+
+            Console.WriteLine($"{str}: {totalPairMatch}");
         }
 
-        private static bool IsAnyOverLapping(List<int> listOfElves, List<int> areasCovered)
+        private static List<int> RangeOverlaps(List<int> firstList, List<int> secondList)
         {
-           var x = listOfElves.Except(areasCovered).ToList();
-           if (x.Any())
-           {
-               areasCovered.AddRange(x);
-           }
-           return !x.Any();
-            
-            
+            return firstList.Count < secondList.Count
+                ? firstList.Intersect(secondList).ToList()
+                : secondList.Intersect(firstList).ToList();
         }
     }
 
@@ -126,21 +78,21 @@ namespace DayFour
     {
         public static List<int> GetElfRange(string[] elfOne)
         {
-            int.TryParse(elfOne[0], out var start);
-            int.TryParse(elfOne[1], out var end);
-            return GetRange(start, end);
+            _ = TryParse(elfOne[0], out var start);
+            _ = TryParse(elfOne[1], out var end);
 
+            return GetRangeForElf(start, end);
         }
 
-        public static List<int> GetRange(int start, int end)
+        private static List<int> GetRangeForElf(int start, int end)
         {
-            var x = new List<int>();
+            var range = new List<int>();
             for (var i = start; i <= end; i++)
             {
-                x.Add(i);
+                range.Add(i);
             }
 
-            return x;
+            return range;
         }
     }
 }
